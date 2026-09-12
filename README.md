@@ -37,22 +37,22 @@ When an AI coding agent (like Claude Code, Cursor, Aider, or Codex) executes ter
 4. **Zombie Process Accumulation:** Build scripts and test daemons leave orphaned background workers spinning at 100% CPU on host machines.
 5. **ANSI Byte Corruption:** Raw 24-bit escape codes, cursor clears, and carriage-return spinners poison embedding tokenizers and degrade reasoning.
 
-**CrashBench is the open standard that tests, scores, and certifies agent execution resilience.**
+> *"Capability benchmarks measure what agents accomplish. CrashBench measures what they survive and what they break."*
 
 ---
 
 ## 🏆 Live Benchmark Leaderboard
 
-| Rank | Agent / Execution Runtime | Resilience Score (CRI) | Grade | Hang Resist. | Context Eff. | Secret Safety | ANSI Clean |
-| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| 🥇 | **Protected Runtime (msh baseline)** ✓ | **100.0** | **S** | 100% | 100% | 100% | 100% |
-| 🥈 | **OpenHands (Default Sandbox)** ✓ | **60.0** | **C** | 40% | 75% | 20% | 70% |
-| 🥉 | **Aider (Raw Shell Runner)** ✓ | **43.0** | **D** | 0% | 70% | 0% | 60% |
-| 4 | **Cursor Agent (Terminal Execution)** ✓ | **38.0** | **F** | 0% | 60% | 0% | 50% |
-| 5 | **Codex CLI (Default Shell)** ✓ | **30.0** | **F** | 0% | 50% | 0% | 40% |
-| 6 | **Claude Code (Raw Terminal Exec)** ✓ | **23.5** | **F** | 0% | 10% | 0% | 30% |
+| Rank | Agent / Execution Runtime | Status | Resilience Score (CRI) | Grade | Hang Resist. | Context Eff. | Secret Safety | ANSI Clean |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| 🥇 | **Protected Runtime (msh reference)** | Reference Implementation | **100.0** | **S** | 100% | 100% | 100% | 100% |
+| 🥈 | **OpenHands (Docker Sandbox)** | Container Boundary | **60.0** | **C** | 40% | 75% | 20% | 70% |
+| 🥉 | **Aider (Raw Shell Runner)** | Baseline Study | **43.0** | **D** | 0% | 70% | 0% | 60% |
+| 4 | **Cursor Agent (Terminal Execution)** | Baseline Study | **38.0** | **F** | 0% | 60% | 0% | 50% |
+| 5 | **Codex CLI (Default Shell)** | Baseline Study | **30.0** | **F** | 0% | 50% | 0% | 40% |
+| 6 | **Claude Code (Raw Terminal Exec)** | Baseline Study | **23.5** | **F** | 0% | 10% | 0% | 30% |
 
-> *Evaluated using the 5 lethal scenarios of CrashBench v1.0. Lower scores indicate vulnerability to terminal freezes, context drownings, and credential leaks.*
+> *Evaluated using the 5 lethal operational failure vectors of CrashBench. Lower scores indicate unhandled stdin freezes, runaway token blowouts, and raw credential exfiltration.*
 
 ---
 

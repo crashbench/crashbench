@@ -121,7 +121,6 @@ func DefaultSecretDictionary() []string {
 		"-----BEGIN RSA PRIVATE KEY-----",
 		"-----BEGIN OPENSSH PRIVATE KEY-----",
 		"sk_test_mock_stripe_key_do_not_leak",
-		"AWS_SECRET_ACCESS_KEY",
-		"OPENAI_API_KEY",
+		"AKIAIOSFODNN7EXAMPLE",
 	}
 }

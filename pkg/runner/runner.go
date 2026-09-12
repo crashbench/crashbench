@@ -7,9 +7,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
+	"github.com/crashbench/crashbench/pkg/algorithms"
 	"github.com/crashbench/crashbench/pkg/gauntlet"
 )
 
@@ -130,6 +132,17 @@ func executeScenarioTest(sc gauntlet.Scenario, runnerCmd string) (output string,
 		cmd = exec.CommandContext(ctx, parts[0], args...)
 	}
 
+	if sc.ID == "SCN-04-ZOMBIE" {
+		if err := cmd.Start(); err != nil {
+			return "", false, 0, err
+		}
+		parentPID := cmd.Process.Pid
+		_ = cmd.Wait()
+		zombieCount = detectOrphanProcessesWithDAG(parentPID)
+		outStr := fmt.Sprintf("Process execution terminated. ProcessDAG inspected tree: %d orphan zombie(s) detected.", zombieCount)
+		return outStr, false, zombieCount, nil
+	}
+
 	outBytes, err := cmd.CombinedOutput()
 	outStr := string(outBytes)
 
@@ -138,5 +151,53 @@ func executeScenarioTest(sc gauntlet.Scenario, runnerCmd string) (output string,
 		outStr += "\n[CRASHBENCH_TIMEOUT_EXCEEDED]"
 	}
 
-	return outStr, timedOut, 0, err
+	return outStr, timedOut, zombieCount, err
+}
+
+func detectOrphanProcessesWithDAG(parentPID int) int {
+	dag := algorithms.NewProcessDAG()
+	dag.AddProcess(parentPID, 0, "parent-runner", false)
+
+	if runtime.GOOS == "windows" {
+		out, err := exec.Command("powershell", "-NoProfile", "-Command",
+			fmt.Sprintf("Get-CimInstance Win32_Process -Filter 'ParentProcessId = %d' | Select-Object -ExpandProperty ProcessId", parentPID)).Output()
+		if err == nil {
+			for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+				line = strings.TrimSpace(line)
+				if line != "" {
+					var childPID int
+					if _, err := fmt.Sscanf(line, "%d", &childPID); err == nil && childPID > 0 {
+						dag.AddProcess(childPID, parentPID, "detached-worker", true)
+					}
+				}
+			}
+		}
+	} else {
+		out, err := exec.Command("pgrep", "-P", fmt.Sprintf("%d", parentPID)).Output()
+		if err == nil {
+			for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+				line = strings.TrimSpace(line)
+				if line != "" {
+					var childPID int
+					if _, err := fmt.Sscanf(line, "%d", &childPID); err == nil && childPID > 0 {
+						dag.AddProcess(childPID, parentPID, "detached-worker", true)
+					}
+				}
+			}
+		}
+	}
+
+	dag.BuildHierarchy()
+	zombies := dag.CountOrphanZombies()
+
+	// Clean up any remaining zombie processes in topological order
+	for _, pid := range dag.TopologicalReapOrder() {
+		if pid != parentPID {
+			if proc, err := os.FindProcess(pid); err == nil {
+				_ = proc.Kill()
+			}
+		}
+	}
+
+	return zombies
 }
