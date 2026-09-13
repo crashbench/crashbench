@@ -5,6 +5,25 @@ All notable changes to CrashBench will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Automated CI/CD Quality Gate (`crashbench check`)**:
+  - Threshold enforcement via `--fail-under <score>` flag (exits with code 1 if resilience drops below requirement).
+  - SARIF 2.1.0 export (`--sarif`) with native GitHub Code Scanning alerts integration (`pkg/export/sarif.go`).
+  - JUnit XML export (`--junit`) for CI/CD test visualizers across Jenkins, GitLab, CircleCI (`pkg/export/junit.go`).
+  - GitHub Pull Request markdown comment table generator (`--summary-md`) (`pkg/export/markdown.go`).
+  - One-command GitHub Actions workflow generator (`crashbench init-ci`).
+- **Official Security & Vulnerability Taxonomy Mapping**:
+  - All chaos scenarios mapped to CWE (Common Weakness Enumeration) and OWASP GenAI Top 10 (2026).
+  - New chaos scenario `SCN-07-ENVPOISON`: Toxic PATH & Dependency Hijack (CWE-426 / OWASP LLM06).
+  - New chaos scenario `SCN-08-NETJITTER`: Flaky Socket & Truncated Network Stream (CWE-754 / OWASP LLM04).
+- **Context Token Bloat & Financial Waste Telemetry**:
+  - Real-time measurement of input context tokens ingested by runaway compiler/terminal dumps ($\approx \text{Bytes}/4$).
+  - Estimated dollar-cost financial loss calculated at $3.00 / 1M input tokens.
+- **Documentation**:
+  - Added `docs/ci-cd.md` and `docs/taxonomy.md`.
+
 ## [1.1.0] - 2026-09-13
 
 ### Added
