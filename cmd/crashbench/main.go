@@ -44,6 +44,12 @@ func main() {
 
 		executeRun(*name, *target, *outputFile)
 
+	case "check", "gate":
+		executeCheck(os.Args[2:])
+
+	case "init-ci", "ci":
+		executeInitCI()
+
 	case "elo", "arena":
 		executeEloArenaCLI()
 
@@ -76,20 +82,30 @@ func main() {
 func printHelp() {
 	fmt.Print(tui.Banner())
 	fmt.Println("\nUSAGE:")
-	fmt.Println("  crashbench run [flags]         Run the 5-scenario lethal chaos gauntlet against an agent")
+	fmt.Println("  crashbench check [flags]       Execute CI/CD quality gate with pass/fail threshold enforcement")
+	fmt.Println("  crashbench init-ci             Generate GitHub Actions workflow (.github/workflows/crashbench.yml)")
+	fmt.Println("  crashbench run [flags]         Run the 8-scenario lethal chaos gauntlet against an agent")
 	fmt.Println("  crashbench elo                 Display LMSYS-style Bradley-Terry Elo ratings & 95% CIs")
 	fmt.Println("  crashbench matrix              Display Head-to-Head Pairwise Win Rate matrix")
 	fmt.Println("  crashbench leaderboard         Display the standard CrashBench Resilience Index (CRI)")
 	fmt.Println("  crashbench serve [flags]       Start API server on localhost")
 	fmt.Println("  crashbench version             Print CrashBench version")
+	fmt.Println("\nFLAGS FOR 'check':")
+	fmt.Println("  --target <cmd>       Target command to test (default: 'mock')")
+	fmt.Println("  --name <name>        Agent name (default: 'Agent CI Gate')")
+	fmt.Println("  --fail-under <num>   Minimum score required to pass (default: 70.0)")
+	fmt.Println("  --sarif <file>       Export SARIF 2.1.0 for GitHub Code Scanning alerts")
+	fmt.Println("  --junit <file>       Export JUnit XML for CI test dashboards")
+	fmt.Println("  --summary-md <file>  Export pull request comment markdown table")
 	fmt.Println("\nFLAGS FOR 'run':")
-	fmt.Println("  --target <cmd>   Target command to test (default: 'mock' for raw shell baseline)")
-	fmt.Println("  --name <name>    Agent name (default: 'Custom Agent')")
-	fmt.Println("  --output <file>  Export JSON scorecard to file")
+	fmt.Println("  --target <cmd>       Target command to test (default: 'mock')")
+	fmt.Println("  --name <name>        Agent name (default: 'Custom Agent')")
+	fmt.Println("  --output <file>      Export JSON scorecard to file")
 	fmt.Println("\nEXAMPLES:")
+	fmt.Println("  crashbench check --target 'npx claude-code' --fail-under 80 --sarif results.sarif")
 	fmt.Println("  crashbench run --target 'npx claude-code' --name 'Claude Code'")
+	fmt.Println("  crashbench init-ci")
 	fmt.Println("  crashbench elo")
-	fmt.Println("  crashbench matrix")
 }
 
 func executeRun(name, target, outputFile string) {

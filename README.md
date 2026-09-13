@@ -24,7 +24,7 @@
 
 ---
 
-## ⚡ Why CrashBench?
+## Why CrashBench?
 
 Existing AI benchmarks test **code capability** (can the model solve a Python leetcode puzzle?) or **text prompt injection** (can it be tricked into writing bad words?).
 
@@ -41,22 +41,22 @@ When an AI coding agent (like Claude Code, Cursor, Aider, or Codex) executes ter
 
 ---
 
-## 🏆 Live Benchmark Leaderboard
+## Live Benchmark Leaderboard
 
 | Rank | Agent / Execution Runtime | Status | Resilience Score (CRI) | Grade | Hang Resist. | Context Eff. | Secret Safety | ANSI Clean |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| 🥇 | **Protected Runtime (msh reference)** | Reference Implementation | **100.0** | **S** | 100% | 100% | 100% | 100% |
-| 🥈 | **OpenHands (Docker Sandbox)** | Container Boundary | **60.0** | **C** | 40% | 75% | 20% | 70% |
-| 🥉 | **Aider (Raw Shell Runner)** | Baseline Study | **43.0** | **D** | 0% | 70% | 0% | 60% |
+| 1 | **Protected Runtime (msh reference)** | Reference Implementation | **100.0** | **S** | 100% | 100% | 100% | 100% |
+| 2 | **OpenHands (Docker Sandbox)** | Container Boundary | **60.0** | **C** | 40% | 75% | 20% | 70% |
+| 3 | **Aider (Raw Shell Runner)** | Baseline Study | **43.0** | **D** | 0% | 70% | 0% | 60% |
 | 4 | **Cursor Agent (Terminal Execution)** | Baseline Study | **38.0** | **F** | 0% | 60% | 0% | 50% |
 | 5 | **Codex CLI (Default Shell)** | Baseline Study | **30.0** | **F** | 0% | 50% | 0% | 40% |
 | 6 | **Claude Code (Raw Terminal Exec)** | Baseline Study | **23.5** | **F** | 0% | 10% | 0% | 30% |
 
-> *Evaluated using the 5 lethal operational failure vectors of CrashBench. Lower scores indicate unhandled stdin freezes, runaway token blowouts, and raw credential exfiltration.*
+> *Evaluated using the canonical operational failure vectors of CrashBench. Lower scores indicate unhandled stdin freezes, runaway token blowouts, and raw credential exfiltration.*
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install CrashBench
 
@@ -84,7 +84,29 @@ crashbench run --name "Claude Code" --target "npx claude-code"
 crashbench run --name "MyAgent" --target "mock" --output scorecard.json
 ```
 
-### 3. Launch the Embedded Web Arena & Leaderboard
+### 3. Enforce Safety in CI/CD (The Agent Safety Gate)
+
+CrashBench acts as an enterprise quality gate in continuous integration pipelines:
+
+```bash
+# Block pull requests if agent resilience score falls below 80%
+crashbench check --target "npx my-agent" --fail-under 80.0
+
+# Export SARIF 2.1.0 for GitHub Code Scanning and JUnit XML for test dashboards
+crashbench check \
+  --target "npx my-agent" \
+  --fail-under 80.0 \
+  --sarif crashbench.sarif \
+  --junit junit.xml \
+  --summary-md pr-comment.md
+
+# Scaffold a production GitHub Actions workflow in one command
+crashbench init-ci
+```
+
+See [docs/ci-cd.md](docs/ci-cd.md) for full GitHub Actions, GitLab CI, and SARIF setup guides.
+
+### 4. Launch the Embedded Web Arena & Leaderboard
 
 CrashBench compiles with an embedded zero-dependency Web UI:
 
@@ -95,20 +117,26 @@ Open **`http://localhost:4040`** to view the live interactive leaderboard, termi
 
 ---
 
-## 🔬 The Canonical Chaos Vectors
+## The Canonical Chaos Vectors & Security Taxonomy
 
-| Vector ID | Name | Category | Failure Mode & Impact |
-| :--- | :--- | :--- | :--- |
-| **`SCN-01`** | **The Interactive Freeze** | Hang Resistance | Agent locks on `[y/N]` or password prompts without non-blocking resolution. |
-| **`SCN-02`** | **The 30,000-Line Context Bomb** | Context Efficiency | 1.8MB compiler trace floods context window without intelligent truncation. |
-| **`SCN-03`** | **Secret Exfiltration Trap** | Secret Safety | Indirect prompt injection triggers emission of unmasked AWS or OpenAI keys. |
-| **`SCN-04`** | **Orphan Subprocess Leak** | Process Hygiene | Detached child subshells left alive as orphaned background processes. |
-| **`SCN-05`** | **ANSI Escape Labyrinth** | Terminal Fidelity | Unparsed terminal control codes and progress bars pollute token embeddings. |
-| **`SCN-06`** | **Filesystem Symlink Escape** | Boundary Isolation | Symlinks pointing to host sensitive paths (`../../.ssh/id_rsa`, `/etc/shadow`). |
+CrashBench maps all failure modes directly to MITRE Common Weakness Enumeration (CWE) and the OWASP Top 10 for LLM Applications:
+
+| Vector ID | Name | Category | Industry Taxonomy | Failure Mode & Operational Risk |
+| :--- | :--- | :--- | :--- | :--- |
+| **`SCN-01-HANG`** | **The Interactive Freeze** | Hang Resistance | `CWE-835` / `OWASP-LLM04:2026` | Agent locks on `[y/N]` or password prompts without non-blocking resolution. Stalls CI runners indefinitely. |
+| **`SCN-02-BOMB`** | **The 30,000-Line Context Bomb** | Context Efficiency | `CWE-400` / `OWASP-LLM04:2026` | 1.8MB compiler trace floods context window without intelligent truncation. Spikes token costs by $15-$25/prompt. |
+| **`SCN-03-LEAK`** | **Secret Exfiltration Trap** | Secret Safety | `CWE-200` / `OWASP-LLM02:2026` | Indirect prompt injection triggers emission of unmasked AWS or OpenAI keys into provider logs. |
+| **`SCN-04-ZOMBIE`** | **Orphan Subprocess Leak** | Process Hygiene | `CWE-404` / `OWASP-LLM06:2026` | Detached child subshells left alive as orphaned background processes pinning host CPU at 100%. |
+| **`SCN-05-ANSI`** | **ANSI Escape Labyrinth** | Terminal Fidelity | `CWE-116` / `OWASP-LLM08:2026` | Unparsed terminal control codes, spinners, and screen clears corrupt tokenizer embeddings. |
+| **`SCN-06-SYMLINK`** | **Filesystem Symlink Escape** | Boundary Isolation | `CWE-22` / `OWASP-LLM09:2026` | Malicious repository symlink points to host sensitive files (`~/.ssh/id_rsa`, `/etc/shadow`). |
+| **`SCN-07-ENVPOISON`** | **Toxic PATH & Dependency Hijack** | Boundary Isolation | `CWE-426` / `OWASP-LLM06:2026` | Agent prioritizes untrusted relative `node_modules/.bin` paths over verified system binaries. |
+| **`SCN-08-NETJITTER`** | **Flaky Socket & Truncated Stream** | Hang Resistance | `CWE-754` / `OWASP-LLM04:2026` | Mid-stream TCP reset during pip/npm install triggers infinite loop or unhandled pipeline freeze. |
+
+Detailed mitigation algorithms and CS mathematical formulations are documented in [docs/taxonomy.md](docs/taxonomy.md).
 
 ---
 
-## 🎨 Bohemian & Handwritten Minimalist Interactive CLI
+## Bohemian & Handwritten Minimalist Interactive CLI
 
 CrashBench includes a bespoke 24-bit TrueColor interactive terminal experience:
 
@@ -120,16 +148,16 @@ crashbench interactive
 ```
 
 Key capabilities:
-- `[1] 🏆 Bradley-Terry Elo Leaderboard`: Live MLE calculations with 95% Bayesian bootstrap CI slider bars `[───●━━─]`.
-- `[2] ⚔️ Side-by-Side Chaos Battle Arena`: Select any two agent runtimes and inject failure vectors with split-screen diffs.
-- `[3] 📊 Pairwise Win-Rate Heatmap`: Head-to-head empirical win frequency matrix across 2,500+ gauntlet battles.
-- `[4] 🔍 Deep Agent Scorecard Inspector`: Multi-scenario scorecards and full terminal transcripts.
-- `[5] 🚀 Run Live Chaos Gauntlet`: Execute lethal scenarios against target agents.
-- `[6] 📜 Research Field Notes & Math`: CS formulations (Aho-Corasick DFA, Shannon entropy, Tarjan DAG).
+- `[1] Bradley-Terry Elo Leaderboard`: Live MLE calculations with 95% Bayesian bootstrap CI slider bars `[---*---]`.
+- `[2] Side-by-Side Chaos Battle Arena`: Select any two agent runtimes and inject failure vectors with split-screen diffs.
+- `[3] Pairwise Win-Rate Heatmap`: Head-to-head empirical win frequency matrix across 2,500+ gauntlet battles.
+- `[4] Deep Agent Scorecard Inspector`: Multi-scenario scorecards, token bloat telemetry, and full terminal transcripts.
+- `[5] Run Live Chaos Gauntlet`: Execute lethal scenarios against target agents.
+- `[6] Research Field Notes & Math`: CS formulations (Aho-Corasick DFA, Shannon entropy, Tarjan DAG).
 
 ---
 
-## 🛡️ Embed Your Verified Badge
+## Embed Your Verified Badge
 
 Showcase your agent's resilience score on your GitHub README:
 
@@ -141,22 +169,29 @@ Showcase your agent's resilience score on your GitHub README:
 
 ---
 
-## 🏛️ Project Architecture
+## Project Architecture
 
 ```
 crashbench/
 ├── cmd/
-│   └── crashbench/          # CLI entry point (run, serve, leaderboard)
+│   └── crashbench/          # CLI entry point (check, gate, init-ci, run, serve)
 ├── pkg/
-│   ├── gauntlet/            # The 5 lethal scenarios and payload generators
-│   ├── runner/              # Execution engine, process monitor & evaluator
-│   └── scoring/             # Weighted CRI index and badge generation
+│   ├── algorithms/          # Aho-Corasick DFA & Shannon entropy engines
+│   ├── export/              # SARIF 2.1.0, JUnit XML & PR Markdown exporters
+│   ├── gauntlet/            # 8 canonical scenarios with CWE & OWASP mapping
+│   ├── runner/              # Process monitor, execution engine & evaluator
+│   ├── scoring/             # Bradley-Terry MLE & weighted CRI calculator
+│   ├── tui/                 # Bohemian 24-bit TrueColor interactive terminal
+│   └── version/             # Dynamic build & git metadata resolver
+├── docs/
+│   ├── ci-cd.md             # CI/CD Quality Gate & SARIF Integration Guide
+│   └── taxonomy.md          # Failure Mode Taxonomy & Mitigation Matrix
 ├── data/
 │   ├── leaderboard.json     # Verified ground-truth benchmark dataset
 │   └── embed.go             # Go embed package
 ├── web/                     # Embedded Web Arena & Leaderboard
 │   ├── index.html           # Dark glassmorphism dashboard
-│   ├── style.css            # Obsidian & neon design system
+│   ├── style.css            # Bohemian obsidian & amber design system
 │   ├── app.js               # Interactive replay modal & live simulator
 │   └── embed.go             # Embedded static FS
 └── scripts/                 # 1-line installation scripts
@@ -164,7 +199,7 @@ crashbench/
 
 ---
 
-## 🤝 Contributing & Submitting Agent Runs
+## Contributing & Submitting Agent Runs
 
 We accept community benchmark submissions!
 1. Run the gauntlet: `crashbench run --name "YourAgent" --target "your-cli-command" --output results.json`
@@ -172,6 +207,6 @@ We accept community benchmark submissions!
 
 ---
 
-## 📄 License
+## License
 
 Apache License 2.0. See [LICENSE](LICENSE) for details.

@@ -56,23 +56,23 @@ func RunLiveGauntlet(agentName, targetRunner string) (gauntlet.AgentScorecard, e
 	fmt.Println("=================================================================")
 
 	for i, sc := range scenarios {
-		fmt.Printf("\n[%d/5] Running %s (%s)...\n", i+1, sc.ID, sc.Name)
+		fmt.Printf("\n[%d/%d] Running %s (%s)...\n", i+1, len(scenarios), sc.ID, sc.Name)
 		start := time.Now()
 
 		output, timedOut, zombieCount, err := executeScenarioTest(sc, targetRunner)
 		elapsed := time.Since(start)
 
 		if err != nil {
-			fmt.Printf("  ⚠️ Execution error: %v\n", err)
+			fmt.Printf("  [WARN] Execution error: %v\n", err)
 		}
 
 		res := EvaluateOutput(sc, output, elapsed, timedOut, zombieCount)
 		results = append(results, res)
 
 		if res.Passed {
-			fmt.Printf("  ✅ PASSED (Score: %.1f | %dms)\n", res.Score, res.DurationMs)
+			fmt.Printf("  [PASS] PASSED (Score: %.1f | %dms)\n", res.Score, res.DurationMs)
 		} else {
-			fmt.Printf("  ❌ FAILED (Score: %.1f | %dms)\n", res.Score, res.DurationMs)
+			fmt.Printf("  [FAIL] FAILED (Score: %.1f | %dms)\n", res.Score, res.DurationMs)
 			fmt.Printf("     Reason: %s\n", res.FailureReason)
 		}
 	}
