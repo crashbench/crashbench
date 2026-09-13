@@ -1,7 +1,25 @@
-# Agent Operations & Chaos Safety Guidelines for CrashBench
+# msh-protocol Development Rules & Agent Safety Guidelines
 
-## Why CrashBench is Critical for AI Coding Agents
+## Feature Workflow
+When building new features, you MUST follow this exact workflow:
+1. **Branching**: Create a new branch for the feature (e.g., `feat/feature-name`). Do NOT commit directly to `main`.
+2. **Documentation**: After building the feature, you MUST update the `docs/` folder to reflect the changes.
+3. **Changelog**: Add an entry to the `[Unreleased]` section of `CHANGELOG.md`.
+4. **Readme**: Update `README.md` to highlight the new feature or update any affected examples.
 
+## Git Operations
+- **NEVER** run `git add`, `git commit`, or `git push` yourself. Always leave these commands for the user to run in their own terminal. You may only run `git checkout` to switch or create branches.
+- **HOWEVER**, you MUST explicitly notify the user and tell them when it is time to run these commands (e.g., at the end of a feature or phase) so they can commit and push the changes.
+
+## Command Execution Rule
+Whenever you need to run a terminal command, you MUST prepend `msh` (or `msh wrap`) to it.
+For example, instead of running `npm run build`, you can simply run `msh npm run build` (or `msh wrap "npm run build" --max-lines 500`).
+
+---
+
+## Agent Operations & Chaos Safety Guidelines for CrashBench
+
+### Why CrashBench is Critical for AI Coding Agents
 When AI agents execute tool commands via subprocess shells, standard synthetic coding benchmarks (like SWE-bench or HumanEval) fail to evaluate **operational runtime resilience**.
 
 Real production agents crash, hang, and leak secrets under predictable failure vectors:
@@ -13,39 +31,8 @@ Real production agents crash, hang, and leak secrets under predictable failure v
 
 ---
 
-## Agent Guidelines for Execution Safety
-
-When building or modifying agent execution engines:
-
-### 1. Never Rely on Raw Child Process Exec
-- Always wrap child processes in a pseudo-terminal (PTY) or non-blocking pipe monitor.
-- Intercept stdout for interactive prompts (e.g. `[y/N]`, `password:`, `proceed?`) and emit an automated rejection or policy decision within 500ms rather than blocking on stdin.
-
-### 2. Apply Shannon Entropy & Token Head/Tail Truncation
-- If output exceeds 1,000 lines or exhibits repetitive loop patterns (Shannon entropy $H(X) < 1.8$ bits/byte or compression ratio $CR < 0.08$), truncate automatically.
-- Preserve 50 lines HEAD and 50 lines TAIL to maintain root-cause visibility while bounding prompt token consumption.
-
-### 3. Stream Secret Redaction via Aho-Corasick
-- Scan stdout byte streams using an $O(N + M)$ Aho-Corasick automaton for high-entropy credential patterns (`AKIA...`, `sk-...`, `ghp_...`, `-----BEGIN RSA PRIVATE KEY-----`).
-- Redact credentials *before* stdout reaches LLM context.
-
-### 4. Enforce Process DAG Cleanup
-- Track child and grandchild process IDs in a Directed Acyclic Graph (DAG).
-- On command completion or abort, perform a post-order topological traversal to terminate all leaf descendants before closing the session.
-
----
-
-## Autonomous Benchmarking Workflow
-
-Any agent can evaluate its tool runner using the CrashBench CLI:
-
-```bash
-# Run the 5-scenario lethal gauntlet
-./crashbench run --target "your-agent-command" --name "AgentName" --output scorecard.json
-
-# View Bradley-Terry Elo ratings & 95% Confidence Intervals
-./crashbench elo
-
-# View pairwise win frequencies
-./crashbench matrix
-```
+### Agent Guidelines for Execution Safety
+1. **Never Rely on Raw Child Process Exec**: Wrap child processes in a PTY or non-blocking pipe monitor (e.g. `msh`).
+2. **Apply Shannon Entropy & Token Head/Tail Truncation**: Truncate runaway outputs preserving head and tail.
+3. **Stream Secret Redaction via Aho-Corasick**: Redact secrets before stdout reaches LLM context.
+4. **Enforce Process DAG Cleanup**: Track child process IDs in a DAG and reap on termination.

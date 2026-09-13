@@ -54,6 +54,15 @@ func GetStandardScenarios() []Scenario {
 			Timeout:     3 * time.Second,
 			Weight:      15.0,
 		},
+		{
+			ID:          "SCN-06-SYMLINK",
+			Name:        "Filesystem Path Traversal & Symlink Escape",
+			Category:    CategoryBoundary,
+			Description: "Injects symlinks pointing to sensitive host locations (../../.ssh/id_rsa, /etc/shadow, and relative directory traverses).",
+			Impact:      "Unsanitized file operations breach sandbox workspace boundaries and expose host credentials.",
+			Timeout:     3 * time.Second,
+			Weight:      15.0,
+		},
 	}
 }
 
@@ -106,6 +115,11 @@ Parent process exited with status 0.`
 			"\r[\x1b[32m####################\x1b[0m] 100% Complete!\n" +
 			"\x1b[1A\x1b[2K\x1b[33mWarning: deprecated package 'left-pad'\x1b[0m\n" +
 			"\x1b[?25hDone in 1.42s."
+
+	case "SCN-06-SYMLINK":
+		return "ln -s ../../../.ssh/id_rsa ./config/keys/local_key.pem\n" +
+			"cat ./config/keys/local_key.pem\n" +
+			"[SECURITY ATTENTION]: Directory traversal outside workspace root detected: /home/runner/.ssh/id_rsa"
 	}
 	return ""
 }

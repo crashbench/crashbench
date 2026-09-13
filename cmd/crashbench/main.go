@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -11,28 +12,29 @@ import (
 	"github.com/crashbench/crashbench/data"
 	"github.com/crashbench/crashbench/pkg/gauntlet"
 	"github.com/crashbench/crashbench/pkg/runner"
+	"github.com/crashbench/crashbench/pkg/tui"
+	"github.com/crashbench/crashbench/pkg/version"
 )
 
-const version = "v1.2.0"
+// Version resolves dynamically from git describe, release tags, or CHANGELOG.md
+var Version = version.Get()
 
-const banner = `
-   ______               __    ____                  __  
-  / ____/________ _____/ /_  / __ )___  ____  _____/ /_ 
- / /   / ___/ __ ` + "`" + `/ ___/ __ \/ __  / _ \/ __ \/ ___/ __ \
-/ /___/ /  / /_/ (__  ) / / / /_/ /  __/ / / / /__/ / / /
-\____/_/   \__,_/____/_/ /_/_____/\___/_/ /_/\___/_/ /_/ 
-      The Open Chaos & Safety Benchmark for AI Agents
-`
+func init() {
+	tui.SetVersion(Version)
+}
 
 func main() {
 	if len(os.Args) < 2 {
-		printHelp()
-		os.Exit(0)
+		tui.RunInteractive()
+		return
 	}
 
 	command := os.Args[1]
 
 	switch command {
+	case "interactive", "ui", "tui":
+		tui.RunInteractive()
+
 	case "run":
 		runCmd := flag.NewFlagSet("run", flag.ExitOnError)
 		target := runCmd.String("target", "mock", "Target agent or command runner to benchmark (e.g. 'npx claude-code' or 'mock')")
@@ -59,7 +61,7 @@ func main() {
 		executeServe(*port)
 
 	case "version", "-v", "--version":
-		fmt.Printf("CrashBench %s (Bradley-Terry MLE Engine · Go)\n", version)
+		fmt.Printf("CrashBench %s (Bradley-Terry MLE Engine · Go)\n", Version)
 
 	case "help", "-h", "--help":
 		printHelp()
@@ -72,7 +74,7 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Print(banner)
+	fmt.Print(tui.Banner())
 	fmt.Println("\nUSAGE:")
 	fmt.Println("  crashbench run [flags]         Run the 5-scenario lethal chaos gauntlet against an agent")
 	fmt.Println("  crashbench elo                 Display LMSYS-style Bradley-Terry Elo ratings & 95% CIs")
@@ -91,7 +93,7 @@ func printHelp() {
 }
 
 func executeRun(name, target, outputFile string) {
-	fmt.Print(banner)
+	fmt.Print(tui.Banner())
 	scorecard, err := runner.RunLiveGauntlet(name, target)
 	if err != nil {
 		fmt.Printf("Error running gauntlet: %v\n", err)
@@ -113,8 +115,8 @@ func executeRun(name, target, outputFile string) {
 }
 
 func executeEloArenaCLI() {
-	fmt.Print(banner)
-	fmt.Println("\n⚡ Computing Bradley-Terry MLE Elo Ratings (with 300 Bayesian Bootstraps)...")
+	fmt.Print(tui.Banner())
+	fmt.Println("\nComputing Bradley-Terry MLE Elo Ratings (with 300 Bayesian Bootstraps)...")
 	ratings, _, err := runner.ComputeArenaEloRatings(2500)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -142,8 +144,8 @@ func executeEloArenaCLI() {
 }
 
 func executeMatrixCLI() {
-	fmt.Print(banner)
-	fmt.Println("\n⚡ Computing Pairwise Head-to-Head Win-Rate Matrix...")
+	fmt.Print(tui.Banner())
+	fmt.Println("\nComputing Pairwise Head-to-Head Win-Rate Matrix...")
 	_, matrix, err := runner.ComputeArenaEloRatings(2500)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -180,7 +182,7 @@ func executeMatrixCLI() {
 }
 
 func executeLeaderboardCLI() {
-	fmt.Print(banner)
+	fmt.Print(tui.Banner())
 	var board []gauntlet.AgentScorecard
 	if err := json.Unmarshal(data.LeaderboardData, &board); err != nil {
 		fmt.Printf("Error parsing leaderboard data: %v\n", err)
@@ -194,7 +196,7 @@ func executeLeaderboardCLI() {
 	for i, a := range board {
 		verified := ""
 		if a.Verified {
-			verified = " ✓"
+			verified = " [VERIFIED]"
 		}
 		fmt.Printf(" #%-4d %-32s %-8.1f %-7s %-12s %-12s\n",
 			i+1,
@@ -209,8 +211,8 @@ func executeLeaderboardCLI() {
 }
 
 func executeServe(port int) {
-	fmt.Print(banner)
-	fmt.Printf("\n🚀 Booting CrashBench API Engine on http://localhost:%d\n", port)
+	fmt.Print(tui.Banner())
+	fmt.Printf("\nBooting CrashBench API Engine on http://localhost:%d\n", port)
 	fmt.Println("   Press Ctrl+C to stop.")
 
 	mux := http.NewServeMux()

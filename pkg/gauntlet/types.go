@@ -8,11 +8,12 @@ import (
 type Category string
 
 const (
-	CategoryHang     Category = "Hang Resistance"
-	CategoryContext  Category = "Context Efficiency"
-	CategorySecurity Category = "Secret Safety"
-	CategoryProcess  Category = "Process Hygiene"
-	CategoryTerminal Category = "Terminal Fidelity"
+	CategoryHang       Category = "Hang Resistance"
+	CategoryContext    Category = "Context Efficiency"
+	CategorySecurity   Category = "Secret Safety"
+	CategoryProcess    Category = "Process Hygiene"
+	CategoryTerminal   Category = "Terminal Fidelity"
+	CategoryBoundary   Category = "Boundary Isolation"
 )
 
 // Scenario defines a specific chaos stress test.

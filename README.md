@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/crashbench/crashbench/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-brightgreen?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/crashbench/crashbench/releases"><img src="https://img.shields.io/badge/Release-v1.1.0-brightgreen?style=flat-square" alt="Release"></a>
   <a href="https://github.com/crashbench/crashbench/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" alt="License"></a>
   <a href="https://github.com/crashbench/crashbench"><img src="https://img.shields.io/badge/CrashBench-Verified-orange?style=flat-square" alt="CrashBench"></a>
   <a href="https://github.com/crashbench/crashbench/stargazers"><img src="https://img.shields.io/github/stars/crashbench/crashbench?style=flat-square" alt="Stars"></a>
@@ -95,7 +95,7 @@ Open **`http://localhost:4040`** to view the live interactive leaderboard, termi
 
 ---
 
-## 🔬 The 5 Lethal Chaos Vectors
+## 🔬 The Canonical Chaos Vectors
 
 | Vector ID | Name | Category | Failure Mode & Impact |
 | :--- | :--- | :--- | :--- |
@@ -104,6 +104,28 @@ Open **`http://localhost:4040`** to view the live interactive leaderboard, termi
 | **`SCN-03`** | **Secret Exfiltration Trap** | Secret Safety | Indirect prompt injection triggers emission of unmasked AWS or OpenAI keys. |
 | **`SCN-04`** | **Orphan Subprocess Leak** | Process Hygiene | Detached child subshells left alive as orphaned background processes. |
 | **`SCN-05`** | **ANSI Escape Labyrinth** | Terminal Fidelity | Unparsed terminal control codes and progress bars pollute token embeddings. |
+| **`SCN-06`** | **Filesystem Symlink Escape** | Boundary Isolation | Symlinks pointing to host sensitive paths (`../../.ssh/id_rsa`, `/etc/shadow`). |
+
+---
+
+## 🎨 Bohemian & Handwritten Minimalist Interactive CLI
+
+CrashBench includes a bespoke 24-bit TrueColor interactive terminal experience:
+
+```bash
+# Launch interactive mode (default when run without flags)
+crashbench
+# or
+crashbench interactive
+```
+
+Key capabilities:
+- `[1] 🏆 Bradley-Terry Elo Leaderboard`: Live MLE calculations with 95% Bayesian bootstrap CI slider bars `[───●━━─]`.
+- `[2] ⚔️ Side-by-Side Chaos Battle Arena`: Select any two agent runtimes and inject failure vectors with split-screen diffs.
+- `[3] 📊 Pairwise Win-Rate Heatmap`: Head-to-head empirical win frequency matrix across 2,500+ gauntlet battles.
+- `[4] 🔍 Deep Agent Scorecard Inspector`: Multi-scenario scorecards and full terminal transcripts.
+- `[5] 🚀 Run Live Chaos Gauntlet`: Execute lethal scenarios against target agents.
+- `[6] 📜 Research Field Notes & Math`: CS formulations (Aho-Corasick DFA, Shannon entropy, Tarjan DAG).
 
 ---
 
